@@ -38,62 +38,7 @@ module.exports = {
     this._ensureThisImport();
 
     this._debugLog('Setting up ember-visual-test...');
-    let options = Object.assign({}, this.visualTest);
-    let newOptions = app.options.visualTest || {};
-
-    if (newOptions.imageDirectory) {
-      options.imageDirectory = newOptions.imageDirectory;
-    }
-    if (newOptions.imageDiffDirectory) {
-      options.imageDiffDirectory = newOptions.imageDiffDirectory;
-    }
-    if (newOptions.imageTmpDirectory) {
-      options.imageTmpDirectory = newOptions.imageTmpDirectory;
-    }
-    if (newOptions.imageMatchAllowedFailures) {
-      options.imageMatchAllowedFailures = newOptions.imageMatchAllowedFailures;
-    }
-    if (newOptions.imageMatchThreshold) {
-      options.imageMatchThreshold = newOptions.imageMatchThreshold;
-    }
-    if (newOptions.imageLogging) {
-      options.imageLogging = newOptions.imageLogging;
-    }
-    if (newOptions.debugLogging) {
-      options.debugLogging = newOptions.debugLogging;
-    }
-    if (newOptions.imgurClientId) {
-      options.imgurClientId = newOptions.imgurClientId;
-    }
-    if (newOptions.groupByOs) {
-      options.groupByOs = newOptions.groupByOs;
-    }
-    if (newOptions.chromePort) {
-      options.chromePort = newOptions.chromePort;
-    }
-    if (newOptions.windowWidth) {
-      options.windowWidth = newOptions.windowWidth;
-    }
-    if (newOptions.windowHeight) {
-      options.windowHeight = newOptions.windowHeight;
-    }
-    if (newOptions.noSandbox) {
-      options.noSandbox = newOptions.noSandbox;
-    }
-
-    options.forceBuildVisualTestImages = !!process.env.FORCE_BUILD_VISUAL_TEST_IMAGES;
-    this.visualTest = options;
-
-    let osType = os.type().toLowerCase();
-    switch (osType) {
-      case 'windows_nt':
-        osType = 'win';
-        break;
-      case 'darwin':
-        osType = 'mac';
-        break;
-    }
-    options.os = osType;
+    this._setupOptions(app.options.visualTest);
 
     this.import('vendor/visual-test.css', {
       type: 'test'
@@ -349,6 +294,8 @@ module.exports = {
   },
 
   testemMiddleware: function(app) {
+    const visualTest = this.project.config('test').visualTest;
+    this._setupOptions(visualTest);
     this.middleware(app);
   },
 
@@ -389,6 +336,67 @@ module.exports = {
 
   isDevelopingAddon() {
     return false;
-  }
+  },
 
+  _setupOptions(visualTest) {
+    let options = Object.assign({}, this.visualTest);
+    let newOptions = visualTest || {};
+
+    if (newOptions.imageDirectory) {
+      options.imageDirectory = newOptions.imageDirectory;
+    }
+    if (newOptions.imageDiffDirectory) {
+      options.imageDiffDirectory = newOptions.imageDiffDirectory;
+    }
+    if (newOptions.imageTmpDirectory) {
+      options.imageTmpDirectory = newOptions.imageTmpDirectory;
+    }
+    if (newOptions.imageMatchAllowedFailures) {
+      options.imageMatchAllowedFailures = newOptions.imageMatchAllowedFailures;
+    }
+    if (newOptions.imageMatchThreshold) {
+      options.imageMatchThreshold = newOptions.imageMatchThreshold;
+    }
+    if (newOptions.imageLogging) {
+      options.imageLogging = newOptions.imageLogging;
+    }
+    if (newOptions.debugLogging) {
+      options.debugLogging = newOptions.debugLogging;
+    }
+    if (newOptions.imgurClientId) {
+      options.imgurClientId = newOptions.imgurClientId;
+    }
+    if (newOptions.groupByOs) {
+      options.groupByOs = newOptions.groupByOs;
+    }
+    if (newOptions.chromePort) {
+      options.chromePort = newOptions.chromePort;
+    }
+    if (newOptions.windowWidth) {
+      options.windowWidth = newOptions.windowWidth;
+    }
+    if (newOptions.windowHeight) {
+      options.windowHeight = newOptions.windowHeight;
+    }
+    if (newOptions.noSandbox) {
+      options.noSandbox = newOptions.noSandbox;
+    }
+
+    options.forceBuildVisualTestImages = !!process.env.FORCE_BUILD_VISUAL_TEST_IMAGES;
+
+    let osType = os.type().toLowerCase();
+    switch (osType) {
+      case 'windows_nt':
+        osType = 'win';
+        break;
+      case 'darwin':
+        osType = 'mac';
+        break;
+    }
+    options.os = osType;
+
+    this.visualTest = options;
+
+    return options;
+  }
 };
