@@ -45,11 +45,12 @@ module.exports = {
     });
   },
 
-  _launchBrowser: async function() {
+  _launchBrowser: async function({ windowWidth, windowHeight }) {
     let options = this.visualTest;
 
     let flags = [
-      '--enable-logging'
+      '--enable-logging',
+      '--start-maximized'
     ];
 
 
@@ -57,7 +58,6 @@ module.exports = {
     if (process.env.TRAVIS || process.env.CIRCLECI) {
       noSandbox = true;
     }
-
 
     const browser = new HeadlessChrome({
       headless: true,
@@ -68,8 +68,8 @@ module.exports = {
         noSandbox
       },
       deviceMetrics: {
-        width: options.windowWidth,
-        height: options.windowHeight,
+        width: windowWidth || options.windowWidth,
+        height: windowHeight || options.windowHeight,
       },
       browser: {
         browserLog: options.debugLogging
@@ -96,11 +96,11 @@ module.exports = {
     }
   },
 
-  _makeScreenshots: async function(url, fileName, { selector, fullPage, delayMs }) {
+  _makeScreenshots: async function(url, fileName, { selector, fullPage, delayMs, windowWidth, windowHeight }) {
     let options = this.visualTest;
     let browser;
     try {
-      browser = await this._launchBrowser();
+      browser = await this._launchBrowser({ windowWidth, windowHeight });
     } catch(e) {
       console.error('Error when launching browser!');
       console.error(e);
@@ -109,6 +109,8 @@ module.exports = {
     let tab = await browser.newTab({ privateTab: false });
 
     await tab.goTo(url);
+
+    await tab.resizeFullScreen();
 
     tab.onConsole((options) => {
       let logValue = options.map((item) => item.value).join(' ');
@@ -262,6 +264,8 @@ module.exports = {
       let selector = req.body.selector;
       let fullPage = req.body.fullPage || false;
       let delayMs = req.body.delayMs ? parseInt(req.body.delayMs) : 100;
+      let windowHeight = req.body.windowHeight ? parseInt(req.body.windowHeight) : null;
+      let windowWidth = req.body.windowWidth ? parseInt(req.body.windowWidth) : null;
 
       if (fullPage === 'true') {
         fullPage = true;
@@ -271,7 +275,7 @@ module.exports = {
       }
 
       let data = {};
-      this._makeScreenshots(url, fileName, { selector, fullPage, delayMs }).then(({ newBaseline, newScreenshotUrl }) => {
+      this._makeScreenshots(url, fileName, { selector, fullPage, delayMs, windowWidth, windowHeight }).then(({ newBaseline, newScreenshotUrl }) => {
         data.newScreenshotUrl = newScreenshotUrl;
         data.newBaseline = newBaseline;
         return this._compareImages(fileName);
